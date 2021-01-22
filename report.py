@@ -11,6 +11,33 @@ cache_path = '~/.cache'
 oauth_file = '~/.secrets/github-reports'
 oauth_token = ''
 
+timeframes = [
+    {
+        'part': {
+            'label': 'Q3',
+            'start': '8/1/2020',
+            'end':   '10/31/2020',
+        },
+        'whole': {
+            'label': 'FY21',
+            'start': '2/1/2020',
+            'end':   '10/31/2020',
+        }
+    },
+    {
+        'part': {
+            'label': 'Q4',
+            'start': '11/1/2020',
+            'end':   '1/31/2021',
+        },
+        'whole': {
+            'label': 'FY21',
+            'start': '2/1/2020',
+            'end':   '1/31/2021',
+        }
+    },
+]
+
 projects = [
     'pivotal/kpack',
     'concourse',
@@ -300,47 +327,94 @@ def friendly_duration(seconds):
     days = math.floor(hours / 24)
     return '{days} days'.format(days=days)
 
-def report_single_repo(owner, repo, daterange = None):
-    print('{owner}/{repo}'.format(owner=owner, repo=repo))
-    contributors = get_repo_contributors(owner, repo, range('2/1/2020', '10/31/2020'))
-    print('   {count} contributors for FY21'.format(count=len(contributors)))
-    contributors = get_repo_contributors(owner, repo, range('8/1/2020', '10/31/2020'))
-    print('   {count} contributors for Q3FY21'.format(count=len(contributors)))
-    pulls = filter_pulls(get_repo_pulls(owner, repo), range('8/1/2020', '10/31/2020'))
-    print('   {count} pull requests for Q3FY21'.format(count=len(pulls)))
-    our_pulls = get_our_pulls(pulls)
-    print('   {count} pull requests by others for Q3FY21'.format(count=len(pulls)-len(our_pulls)))
-    median = compute_median_review_duration(pulls, range('8/1/2020', '10/31/2020'))
-    print('   {days} median number of days pull requests were in review in Q3FY21'.format(days=median))
-    median = compute_median_response_time(pulls)
-    print('   {duration} median response time for pull requests in Q3FY21'.format(duration=friendly_duration(median)))
+def report_single_repo(owner, repo, timeframe):
 
-def report_all_repos(owner, daterange = None):
+    whole = range(timeframe['whole']['start'], timeframe['whole']['end'])
+    part = range(timeframe['part']['start'], timeframe['part']['end'])
+    wname = timeframe['whole']['label']
+    pname = timeframe['part']['label']
+
+    print('\n{owner}/{repo}'.format(owner=owner, repo=repo))
+
+    whole_contributors = get_repo_contributors(owner, repo, whole)
+    part_contributors = get_repo_contributors(owner, repo, part)
+    print('   {part}/{whole} contributors for {pname}/{wname}'.format(
+        part=len(part_contributors),
+        whole=len(whole_contributors),
+        pname=pname,
+        wname=wname))
+
+    all_pulls = filter_pulls(get_repo_pulls(owner, repo), part)
+    our_pulls = get_our_pulls(all_pulls)
+    total_count = len(all_pulls)
+    our_count = len(our_pulls)
+    other_count = total_count - our_count
+    print('   {others}/{total} ({percentage}%) pull requests by others in {pname}'.format(
+        others=other_count,
+        total=total_count,
+        percentage=math.floor((other_count/total_count) * 100),
+        pname=pname))
+
+    median = compute_median_review_duration(all_pulls, part)
+    print('   {days} median number of days pull requests were in review in {pname}'.format(
+        days=median,
+        pname=pname))
+
+    median = compute_median_response_time(all_pulls)
+    print('   {duration} median response time for pull requests in {pname}'.format(
+        duration=friendly_duration(median),
+        pname=pname))
+
+def report_all_repos(owner, timeframe):
+
+    whole = range(timeframe['whole']['start'], timeframe['whole']['end'])
+    part = range(timeframe['part']['start'], timeframe['part']['end'])
+    wname = timeframe['whole']['label']
+    pname = timeframe['part']['label']
+
     repos = get_cached_results('orgs/{org}/repos'.format(org=owner))
-    print('{owner} ({count} repos)'.format(owner=owner, count=len(repos)))
-    contributors = get_org_contributors(owner, repos, range('2/1/2020', '10/31/2020'))
-    print('   {count} contributors for FY21'.format(count=len(contributors)))
-    contributors = get_org_contributors(owner, repos, range('8/1/2020', '10/31/2020'))
-    print('   {count} contributors for Q3FY21'.format(count=len(contributors)))
-    pulls = filter_pulls(get_org_pulls(owner, repos), range('8/1/2020', '10/31/2020'))
-    print('   {count} pull requests for Q3FY21'.format(count=len(pulls)))
-    our_pulls = get_our_pulls(pulls)
-    print('   {count} pull requests by others for Q3FY21'.format(count=len(pulls)-len(our_pulls)))
-    median = compute_median_review_duration(pulls, range('8/1/2020', '10/31/2020'))
-    print('   {days} median number of days pull requests were in review in Q3FY21'.format(days=median))
-    median = compute_median_response_time(pulls)
-    print('   {duration} median response time for pull requests in Q3FY21'.format(duration=friendly_duration(median)))
+    print('\n{owner} ({count} repos)'.format(owner=owner, count=len(repos)))
 
-def report(daterange = None):
+    whole_contributors = get_org_contributors(owner, repos, whole)
+    part_contributors = get_org_contributors(owner, repos, part)
+    print('   {part}/{whole} contributors for {pname}/{wname}'.format(
+        part=len(part_contributors),
+        whole=len(whole_contributors),
+        pname=pname,
+        wname=wname))
+
+    all_pulls = filter_pulls(get_org_pulls(owner, repos), part)
+    our_pulls = get_our_pulls(all_pulls)
+    total_count = len(all_pulls)
+    our_count = len(our_pulls)
+    other_count = total_count - our_count
+    print('   {others}/{total} ({percentage}%) pull requests by others in {pname}'.format(
+        others=other_count,
+        total=total_count,
+        percentage=math.floor((other_count/total_count) * 100),
+        pname=pname))
+
+    median = compute_median_review_duration(all_pulls, part)
+    print('   {days} median number of days pull requests were in review in {pname}'.format(
+        days=median,
+        pname=pname))
+
+    median = compute_median_response_time(all_pulls)
+    print('   {duration} median response time for pull requests in {pname}'.format(
+        duration=friendly_duration(median),
+        pname=pname))
+
+def report():
     for project in projects:
-        parts = project.split('/')
-        if len(parts) < 2:
-            owner = parts[0]
-            report_all_repos(owner)
-        else:
-            owner = parts[0]
-            repo = parts[1]
-            report_single_repo(owner, repo)
+        for timeframe in timeframes:
+            parts = project.split('/')
+            if len(parts) < 2:
+                owner = parts[0]
+                report_all_repos(owner, timeframe)
+            else:
+                owner = parts[0]
+                repo = parts[1]
+                report_single_repo(owner, repo, timeframe)
 
 if __name__ == '__main__':
     read_token()
