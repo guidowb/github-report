@@ -208,7 +208,7 @@ def filter_commits(commits, daterange):
     return filtered_commits
 
 def get_repo_pulls(owner, repo):
-    url = 'repos/{owner}/{repo}/pulls'.format(owner=owner, repo=repo)
+    url = 'repos/{owner}/{repo}/pulls?state=all'.format(owner=owner, repo=repo)
     pulls = get_cached_results(url)
     return pulls
 
@@ -392,7 +392,7 @@ def filter_commits(commits, daterange):
     return filtered_commits
 
 def get_repo_pulls(owner, repo):
-    url = 'repos/{owner}/{repo}/pulls'.format(owner=owner, repo=repo)
+    url = 'repos/{owner}/{repo}/pulls?state=all'.format(owner=owner, repo=repo)
     pulls = get_cached_results(url)
     return pulls
 
