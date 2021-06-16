@@ -573,10 +573,10 @@ def report_single_repo(owner, repo, timeframe):
         days=median,
         pname=pname))
 
-    median = compute_median_response_time(all_pulls)
-    print('   {duration} median response time for pull requests in {pname}'.format(
-        duration=friendly_duration(median),
-        pname=pname))
+    # median = compute_median_response_time(all_pulls)
+    # print('   {duration} median response time for pull requests in {pname}'.format(
+    #     duration=friendly_duration(median),
+    #     pname=pname))
 
 def report_all_repos(owner, timeframe):
 
@@ -619,10 +619,10 @@ def report_all_repos(owner, timeframe):
         days=median,
         pname=pname))
 
-    median = compute_median_response_time(all_pulls)
-    print('   {duration} median response time for pull requests in {pname}'.format(
-        duration=friendly_duration(median),
-        pname=pname))
+    # median = compute_median_response_time(all_pulls)
+    # print('   {duration} median response time for pull requests in {pname}'.format(
+    #     duration=friendly_duration(median),
+    #     pname=pname))
 
 def report():
     for project in projects:
